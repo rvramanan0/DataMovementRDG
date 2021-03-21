@@ -32,15 +32,7 @@ object PolarisToLanding {
   val msntable = spark.read.option("multiline","true").json("data/__default__/example/data/gsamlogic.json")
     hivetable.printSchema();
 
-//    val colsToRemove = Seq("colA", "colB", "colC", etc)
-//    val filteredDF = df.select(df.columns .filter(colName => !colsToRemove.contains(colName)) .map(colName => new Column(colName)): _*)
 
-    //    proptable.createTempView ("proptable")
-//    hivetable.createTempView("hivetable")
-//    custhash.createTempView("custhash")
-//    msntable.createTempView("msntable")
-//
-//    val proptableop = spark.sql("select * from proptable")
 
     proptable.show()
     proptable.collect.foreach(println)
@@ -75,6 +67,9 @@ object PolarisToLanding {
     val proptable_security = proptable.select($"custid").collect()
     val security_flag = proptable_security.map(x => x.get(0)).mkString(",")
 
+
+    val tabletype = proptable.select($"tabletype").collect()
+    val type_flag = proptable_security.map(x => x.get(0)).mkString(",")
 
 
     val hashArray = maskingcolumns.map(lit(_))
@@ -117,6 +112,19 @@ object PolarisToLanding {
 
     val excludedcolumns = hivetable.select(hivetable.columns .filter(colName => !ignoreFieldsList.contains(colName)) .map(colName => new Column(colName)): _*)
 
+    if(type_flag == "new") {
+      val datefilter = excludedcolumns.filter($"date".between("2015-07-05", "2015-09-02"))
+    }
+
+
+//    else if((type_flag == "old")
+//      {
+//      val datefilter = excludedcolumns.filter($"date".between("2015-07-05", "2015-09-02"))
+//    }
+//    else if((type_flag == "adhoc")
+//    {
+//      val datefilter = excludedcolumns.filter($"date".between("2015-07-05", "2015-09-02"))
+//    }
 //
 //    def addColumnsViaFold(df: DataFrame, columns: List[String]): DataFrame = {
 //      import df.sparkSession.implicits._
@@ -125,15 +133,7 @@ object PolarisToLanding {
 //      })
 //    }
 //
-//    val proptable_maskcolumns1 = proptable.select($"columnstomask")
-//
-//    println("inside function")
-//
-//    val addcoumns = addColumnsViaFold(hivetable,liststring)
-//
-//    addcoumns.printSchema()
-//    addcoumns.show()
-//    addcoumns.columns
+
 
     println("outof function")
 
@@ -155,53 +155,51 @@ object PolarisToLanding {
 
     val testDf = joinDF(hivetable, proptable_custid_df, joinExpr, "inner", selectExpr)
 
-    log.in
+
 
     testDf.printSchema()
     testDf.show()
     testDf.columns
-//
-//    val joinKeys="cust_id|cust_id"
-//
-//val joinkeyarray = joinKeys.toArray.mkString
-//
-//    val conditionArrays = joinkeyarray.split("\\|").map(c => c.split(","))
-//
-//
-//    println(testDf)
-//    val joinExpr = conditionArrays.map { case Array(a, b) => col("a." + a) === col("b." + b) }.reduce(_ and _)
-//    val proptable_custid_df = proptable.select($"custid")
-//
-//    println(joinExpr)
-//
-//
-//    val op =     hivetable.alias("a").join(proptable_custid_df.alias("b"), joinExpr, "left_outer")
-//
-//
-//    op.printSchema()
-//    op.show()
-//    op.columns
-//
-//    println("end joinexp")
 
-  //  val cond = fieldsToJoin.map(x => col(x._1) === col(x._2)).reduce(_ || _)
-
-    //val newDF = maskingcolumns_char.foldLeft(excludedcolumns)((df, name) => df.withColumn(name,excludedcolumns.$"value"))
-
-
-
-//      val hashcolumn = maskingcolumns.map(m => when(month(col("timestamp")) === m, col(s"${m}_col")))
-//    //       change 7 to 8 to a sequence of all exsiting months columns
-
-
-
-
-  //  hashedDF.show()
 
     println("leaving printing hash table2")
 
 
-//    def hashColumns(tableConfig: Map[String, String], salt: String, df: DataFrame): DataFrame = {
+    println("coming for security flag")
+
+
+    //    GSAM security logic
+if (security_flag == "Y") {
+
+  println(security_flag)
+
+  hivetable.createTempView("finalhivetableop")
+  msntable.createTempView("gsamtable")
+
+
+  val sqlquery = "select * from finalhivetableop a where not exists (select 1 from gsamtable b where a.msn = b.msn)"
+
+
+  println(sqlquery)
+
+  val finalset = spark.sql(sqlquery)
+  finalset.show()
+
+} else
+  {
+
+
+    println(security_flag)
+    val finalset = testDf
+    finalset.show()
+  }
+
+
+
+    println("outside for security flag")
+
+
+    //    def hashColumns(tableConfig: Map[String, String], salt: String, df: DataFrame): DataFrame = {
 //
 //      val removedCols = tableConfig.filter(_._2 == "REMOVE").keys.toList
 //      val hashedCols = tableConfig.filter(_._2 == "HASH").keys.toList
@@ -231,11 +229,6 @@ object PolarisToLanding {
     println("proptablestring  - "+excludecolumns+"maskingcolumns-"  +maskingcolumns +"acctid_flag-"  +acctid_flag)
     println("msn_flag  - "+msn_flag +"custid_flag-"  +custid_flag+"security_flag-"  +security_flag)
 
-//    if (col_val_str =="not")
-
-//    println(hivetable.show())
-//    println(custhash.show())
-//    println(msntable.show())
 
 
 //    df.registerTempTable("my_temp_table")
