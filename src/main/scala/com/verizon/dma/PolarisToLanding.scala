@@ -1,12 +1,16 @@
 package com.verizon.dma
 
+
 import com.verizon.dma.beans.AppProperty
+import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DataFrame
+
+import scala.collection.Iterator.empty.++
 //import com.verizon.dma.compaction.computills.getColumnDefinitions
 import org.apache.spark.sql.{Column, SparkSession, functions}
 import org.apache.spark.sql.functions.{array, array_contains, col, lit, sha2, when}
 
-object PolarisToLanding {
+object PolarisToLanding extends Logging {
 
 //
 //  if (System.getProperty("os.name").contains("Windows")) {
@@ -26,9 +30,13 @@ object PolarisToLanding {
       .config("spark.master", "local")
       .getOrCreate()
 
-    val proptable = spark.read.option("multiline","true").json("C:\\Users\\Venkataramanan\\IdeaProjects\\DataMovementRDG\\data\\__default__\\example\\data\\property.json")
+    //step -1 Loading Property,Hash and hive table
+
+    logInfo("Spark application started ")
+
+   val proptable = spark.read.option("multiline","true").json("C:\\Users\\Venkataramanan\\IdeaProjects\\DataMovementRDG\\data\\__default__\\example\\data\\property.json")
     val hivetable = spark.read.option("multiline","true").json("C:\\Users\\Venkataramanan\\IdeaProjects\\DataMovementRDG\\data\\__default__\\example\\data\\hivetable.json")
-  val custhash = spark.read.option("multiline","true").json("C:\\Users\\Venkataramanan\\IdeaProjects\\DataMovementRDG\\data\\__default__\\example\\data\\custhash.json")
+   val custhash = spark.read.option("multiline","true").json("C:\\Users\\Venkataramanan\\IdeaProjects\\DataMovementRDG\\data\\__default__\\example\\data\\custhash.json")
   val msntable = spark.read.option("multiline","true").json("data/__default__/example/data/gsamlogic.json")
     hivetable.printSchema();
 
@@ -48,11 +56,19 @@ object PolarisToLanding {
     val ignoreFieldsList = (if(excludecolumns.isEmpty) List("") else excludecolumns.toList)
 
 
-    val proptable_maskcolumns = proptable.select($"columnstomask").collect()
-    val maskingcolumns = proptable_maskcolumns.map(x => x.get(0)).mkString(",")
+    val proptable_maskcolumns = proptable.select($"columnstomask")
+    //val maskingcolumns = proptable_maskcolumns.map(x => x.getString(0)).mkString(",")
+   // val maskingFieldsList = (if(maskingcolumns.isEmpty) List("") else maskingcolumns.toList)
+
+
+
+
+
+
+    //val maskingcolumnsList = (if(maskingcolumns.isEmpty) List("") else maskingcolumns.toList)
 
     val liststring = proptable.select("columnstomask").map(r => r.getString(0)).collect.toList
-    val maskingcolumns_char = maskingcolumns.toList
+    //val maskingcolumns_char = maskingcolumns.toList
 
 
     val proptable_acctid = proptable.select($"acctid").collect()
@@ -72,28 +88,19 @@ object PolarisToLanding {
     val type_flag = proptable_security.map(x => x.get(0)).mkString(",")
 
 
-    val hashArray = maskingcolumns.map(lit(_))
 
-    println("hasharray-" +hashArray.toString())
 
-    val salt = "abc"
+
+
 
 //    var hivetable_mask = hivetable
 //    for (col <- maskingcolumns){
 //      hivetable_mask = hivetable_mask.withColumn(col, lit(sha2(col,256)))
 //    }
 
-//    val hashedDF = hivetable.columns.foldLeft(hivetable) {
-//      (memoDF, colName) =>
-//        memoDF.withColumn(
-//          colName,
-//
-//          // 2nd.change: check if colName is in "a", "b", "c", "d" etc, if so apply sha2 otherwise leave the value as it is
-//          when(col(colName).isNotNull && array_contains(array(hashArray:_*) ,
-//            sha2(functions.concat(col(colName))
-//          )
-//        )
-//    }
+
+
+
 
 
 
@@ -111,6 +118,23 @@ object PolarisToLanding {
 
 
     val excludedcolumns = hivetable.select(hivetable.columns .filter(colName => !ignoreFieldsList.contains(colName)) .map(colName => new Column(colName)): _*)
+
+   // val excludedcolumns_mask = excludedcolumns.select(hivetable.columns .filter(colName => !maskingcolumnsList.contains(colName)) .map(colName => new Column(colName,256)): _*)
+
+  //  val excludemaskingmap = stringToMap(maskingcolumns)
+
+  //  excludedcolumns_mask.printSchema()
+
+//    println("maskingvalues - "+maskingFieldsList)
+//
+//    val transformedCols = maskingFieldsList.map{ c =>
+//      when(col(c.toString).isNotNull , sha2(col(c.toString),256))
+//    }
+
+//    val hashedDF = hivetable.select((transformedCols):_*)
+//    println("hashvalue")
+//    hashedDF.printSchema()
+//    hashedDF.show()
 
     if(type_flag == "new") {
       val datefilter = excludedcolumns.filter($"date".between("2015-07-05", "2015-09-02"))
@@ -156,6 +180,30 @@ object PolarisToLanding {
     val testDf = joinDF(hivetable, proptable_custid_df, joinExpr, "inner", selectExpr)
 
 
+//    val mask = Seq("name", "age")
+//    val expr = hivetable.columns.map { col =>
+//      if (maskingFieldsList.contains(col)) s"""SHA2(${col},256) as ${col}"""
+//      else col
+//    }
+
+
+
+    println("maskingin2 - op")
+   // hivetable.selectExpr(expr: _*).show
+
+    println("maskingin2 - end")
+
+
+
+
+    //
+//    val transformedCols2 = transformedCols.select(transformedCols)
+
+
+    //      val transformedCols = hashedCols.map{ c =>
+    //        when(col(c).isNotNull , sha2(concat(col(c), lit(salt)), 256)).as(c)
+    //      }
+
 
     testDf.printSchema()
     testDf.show()
@@ -196,6 +244,8 @@ if (security_flag == "Y") {
 
 
 
+
+
     println("outside for security flag")
 
 
@@ -226,7 +276,7 @@ if (security_flag == "Y") {
 //    }
 
 
-    println("proptablestring  - "+excludecolumns+"maskingcolumns-"  +maskingcolumns +"acctid_flag-"  +acctid_flag)
+    println("proptablestring  - "+excludecolumns+"maskingcolumns-"   +"acctid_flag-"  +acctid_flag)
     println("msn_flag  - "+msn_flag +"custid_flag-"  +custid_flag+"security_flag-"  +security_flag)
 
 

@@ -15,4 +15,6 @@ class AppProperty() {
   @BeanProperty var fromoffset: String = null
 
 
+
+
 }

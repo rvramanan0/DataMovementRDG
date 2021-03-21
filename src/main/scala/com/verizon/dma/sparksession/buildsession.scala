@@ -53,17 +53,17 @@ trait buildsession extends Logging {
    * @param keyVaultSecret
    * @return Spark session
    */
-  def buildSparkSession(appProperty: AppProperty): SparkSession = {
+  def buildSparkSession: SparkSession = {
 
-    val mode = appProperty.mode
-    val appName = appProperty.appName
+//    val mode = appProperty.mode
+//    val appName = appProperty.appName
 
 
 
     val conf = new SparkConf()
 
-    conf.setMaster(mode)
-      .setAppName(appName)
+    conf.setMaster("local")
+      .setAppName("testing me")
 
 
     _sparkSession = SparkSession
