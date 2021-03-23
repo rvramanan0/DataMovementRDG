@@ -225,12 +225,15 @@ if (security_flag == "Y") {
   msntable.createTempView("gsamtable")
 
 
-  val sqlquery = "select * from finalhivetableop a where not exists (select 1 from gsamtable b where a.msn = b.msn)"
+  val sqlquery = "select sha2(cast(a.phno as string),256),a.phno from finalhivetableop a where not exists (select 1 from gsamtable b where a.msn = b.msn)"
 
 
   println(sqlquery)
 
+
   val finalset = spark.sql(sqlquery)
+
+
   finalset.show()
 
 } else
