@@ -1,3 +1,3 @@
-{"tablename":"abc","tabletype":"new","columnsexclude":"dummy","columnstomask":"phno,custid","partitioncolumn":"date","datecolumn":"date","custid":"Y","acctid":"Y","msn":"Y","securityflag":"Y","joname":62,"jobstatus":"new","datefrom":62,"dateto":62,"frequency":"a","polarislanding":"a","rdglanding":"a"}
+{"tablename":"abc","tabletype":"new","columnsexclude":"dummmmmy","columnstomask":"phno,custid","partitioncolumn":"date","datecolumn":"date","custid":"Y","acctid":"Y","msn":"Y","securityflag":"Y","joname":62,"jobstatus":"new","datefrom":62,"dateto":62,"frequency":"a","polarislanding":"a","rdglanding":"a"}
 
 
